@@ -3,67 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لغة الإشارة - نسخة خفيفة</title>
+    <title>لغة الإشارة - كشف حقيقي بالكاميرا</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
-            background: #1a1a2e;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
             color: white;
             padding: 20px;
         }
-        .container { max-width: 800px; margin: 0 auto; }
+        .container { max-width: 1000px; margin: 0 auto; }
         .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { color: #ffd700; margin-bottom: 10px; }
-        video {
+        .header h1 { color: #ffd700; margin-bottom: 10px; font-size: 1.8em; }
+        .video-container {
+            position: relative;
             width: 100%;
-            border-radius: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 20px;
+            overflow: hidden;
             background: #000;
-            transform: scaleX(-1);
         }
+        video, canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: auto;
+            border-radius: 20px;
+        }
+        video { position: relative; z-index: 1; transform: scaleX(-1); }
+        canvas { position: absolute; z-index: 2; transform: scaleX(-1); }
         .controls {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             justify-content: center;
             margin: 20px 0;
             flex-wrap: wrap;
         }
         button {
-            padding: 12px 24px;
-            font-size: 16px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
+            padding: 12px 30px;
+            font-size: 1em;
             font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s;
         }
+        button:hover { transform: scale(1.05); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         .btn-start { background: #2ecc71; color: white; }
         .btn-stop { background: #e74c3c; color: white; }
         .result {
             text-align: center;
             padding: 20px;
             background: #16213e;
-            border-radius: 15px;
+            border-radius: 20px;
             margin-top: 20px;
         }
-        .detected-sign { font-size: 4em; }
-        .detected-name { font-size: 1.5em; color: #ffd700; margin: 10px 0; }
-        .signs-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .sign-item {
-            background: #2d3561;
-            padding: 10px;
-            border-radius: 10px;
-            text-align: center;
-            min-width: 80px;
-        }
-        .sign-emoji { font-size: 2em; }
-        .sign-name { font-size: 0.8em; margin-top: 5px; }
-        .loading { text-align: center; padding: 50px; }
+        .detected-sign { font-size: 5em; margin: 10px 0; }
+        .detected-name { font-size: 1.8em; color: #ffd700; margin: 10px 0; }
+        .confidence { font-size: 0.9em; color: #aaa; }
         .auto-speak {
             display: flex;
             align-items: center;
@@ -71,133 +72,304 @@
             gap: 10px;
             margin: 15px 0;
         }
+        .status {
+            background: #0f0f1a;
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #aaa;
+            text-align: center;
+        }
+        .signs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .sign-card {
+            background: #2d3561;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .sign-card:hover { background: #3d4571; }
+        .sign-emoji { font-size: 2em; }
+        .sign-name { font-size: 0.8em; margin-top: 5px; }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.2em; }
+            .detected-name { font-size: 1.2em; }
+            button { padding: 8px 20px; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🤟 كاميرا لغة الإشارة 🤟</h1>
-            <p>أشر بيدك أمام الكاميرا</p>
+            <h1>🤟 كاميرا لغة الإشارة - كشف فوري 🤟</h1>
+            <p>أشر بيدك أمام الكاميرا - البرنامج هيتعرف على الإشارة وينطقها فوراً</p>
         </div>
 
-        <video id="video" autoplay playsinline></video>
+        <div class="video-container">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas"></canvas>
+        </div>
 
         <div class="controls">
-            <button class="btn-start" id="startBtn" onclick="startCamera()">▶️ تشغيل</button>
-            <button class="btn-stop" id="stopBtn" onclick="stopCamera()" disabled>⏹️ إيقاف</button>
+            <button class="btn-start" id="startBtn" onclick="startCamera()">▶️ تشغيل الكاميرا</button>
+            <button class="btn-stop" id="stopBtn" onclick="stopCamera()" disabled>⏹️ إيقاف الكاميرا</button>
         </div>
 
         <div class="auto-speak">
             <input type="checkbox" id="autoSpeak" checked>
-            <label>🔊 نطق تلقائي</label>
+            <label>🔊 نطق تلقائي (ينطق الإشارة فور اكتشافها)</label>
         </div>
 
         <div class="result">
             <div class="detected-sign" id="detectedSign">🤚</div>
             <div class="detected-name" id="detectedName">في انتظار الإشارة</div>
+            <div class="confidence" id="confidence"></div>
         </div>
 
-        <div class="signs-list" id="signsList">
-            <div class="loading">جاري التحميل...</div>
+        <div class="status" id="status">
+            ⏳ جاري تحميل نموذج الكشف...
         </div>
+
+        <div class="signs-grid" id="signsGrid"></div>
     </div>
+
+    <!-- MediaPipe Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
     <script>
         let video = null;
-        let stream = null;
+        let canvas = null;
+        let ctx = null;
         let cameraRunning = false;
-        let signsList = [];
-        let lastDetected = "";
+        let hands = null;
+        let camera = null;
+        let lastDetectedSign = "";
+        let lastSpeakTime = 0;
         let speechSynth = window.speechSynthesis;
 
-        // بيانات الإشارات (مباشرة - بدون تحميل من خادم)
-        const defaultSigns = [
-            { sign: "🤟", name: "أحبك" },
-            { sign: "👍", name: "تمام" },
-            { sign: "✌️", name: "سلام" },
-            { sign: "☝️", name: "واحد" },
-            { sign: "✊", name: "قبضة" },
-            { sign: "🖐️", name: "خمسة" },
-            { sign: "🤙", name: "كلمني" },
-            { sign: "👋", name: "مع السلامة" }
+        // الإشارات المتعرف عليها
+        const signs = [
+            { id: "iloveyou", sign: "🤟", name: "أحبك", fingers: [true, true, false, false, true] },      // إبهام + سبابة + خنصر
+            { id: "good", sign: "👍", name: "تمام", fingers: [true, false, false, false, false] },        // إبهام بس
+            { id: "peace", sign: "✌️", name: "سلام", fingers: [false, true, true, false, false] },       // سبابة + وسطى
+            { id: "one", sign: "☝️", name: "واحد", fingers: [false, true, false, false, false] },        // سبابة بس
+            { id: "fist", sign: "✊", name: "قبضة", fingers: [false, false, false, false, false] },       // كل حاجة مقبوضة
+            { id: "five", sign: "🖐️", name: "خمسة", fingers: [true, true, true, true, true] },          // كل حاجة مرفوعة
+            { id: "call", sign: "🤙", name: "كلمني", fingers: [true, false, false, false, true] },       // إبهام + خنصر
+            { id: "ok", sign: "👌", name: "حلو", fingers: ["special"] }                                   // إشارة OK خاصة
         ];
 
-        // عرض الإشارات
-        function displaySigns() {
-            const container = document.getElementById('signsList');
-            container.innerHTML = defaultSigns.map(s => `
-                <div class="sign-item">
+        // عرض قائمة الإشارات
+        function displaySignsList() {
+            const grid = document.getElementById('signsGrid');
+            grid.innerHTML = signs.map(s => `
+                <div class="sign-card" onclick="speakText('${s.name}')">
                     <div class="sign-emoji">${s.sign}</div>
                     <div class="sign-name">${s.name}</div>
                 </div>
             `).join('');
         }
 
-        // نطق
-        function speak(text) {
-            if (!document.getElementById('autoSpeak').checked) return;
+        // نطق النص
+        function speakText(text) {
             if (!text) return;
-            
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'ar-SA';
-            utterance.rate = 0.8;
+            utterance.rate = 0.9;
             speechSynth.cancel();
             speechSynth.speak(utterance);
         }
 
-        // كشف الإشارة (طريقة مبسطة وسريعة)
-        function detectSignFromHand() {
-            // كل ثانية نغير الإشارة عشوائياً للاختبار
-            if (!cameraRunning) return;
+        // كشف الإشارة من نقاط اليد
+        function detectSign(landmarks) {
+            // جلب نقاط الأصابع
+            const thumbTip = landmarks[4];
+            const thumbIP = landmarks[3];
+            const indexTip = landmarks[8];
+            const indexPIP = landmarks[6];
+            const middleTip = landmarks[12];
+            const middlePIP = landmarks[10];
+            const ringTip = landmarks[16];
+            const ringPIP = landmarks[14];
+            const pinkyTip = landmarks[20];
+            const pinkyPIP = landmarks[18];
+
+            // تحديد الأصابع المرفوعة (المقارنة بالنقاط المرجعية)
+            const thumbUp = thumbTip.y < thumbIP.y;
+            const indexUp = indexTip.y < indexPIP.y;
+            const middleUp = middleTip.y < middlePIP.y;
+            const ringUp = ringTip.y < ringPIP.y;
+            const pinkyUp = pinkyTip.y < pinkyPIP.y;
+
+            const fingers = [thumbUp, indexUp, middleUp, ringUp, pinkyUp];
             
-            const randomSign = defaultSigns[Math.floor(Math.random() * defaultSigns.length)];
-            const currentName = document.getElementById('detectedName').innerHTML;
-            
-            if (randomSign.name !== currentName) {
-                document.getElementById('detectedSign').innerHTML = randomSign.sign;
-                document.getElementById('detectedName').innerHTML = randomSign.name;
-                speak(randomSign.name);
+            // مقارنة مع الإشارات
+            for (let sign of signs) {
+                if (sign.fingers && Array.isArray(sign.fingers)) {
+                    let match = true;
+                    for (let i = 0; i < 5; i++) {
+                        if (sign.fingers[i] !== fingers[i]) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) return sign;
+                }
             }
             
-            setTimeout(() => detectSignFromHand(), 2000);
+            return null;
         }
 
-        // بدء الكاميرا (بدون معالجة - سريعة جداً)
-        async function startCamera() {
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video = document.getElementById('video');
-                video.srcObject = stream;
-                await video.play();
+        // معالجة نتائج الكشف
+        function onResults(results) {
+            if (!ctx || !canvas) return;
+            
+            // مسح الكانفاس
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            let detectedSign = null;
+            
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
                 
-                cameraRunning = true;
-                document.getElementById('startBtn').disabled = true;
-                document.getElementById('stopBtn').disabled = false;
+                // رسم نقاط اليد
+                for (let i = 0; i < landmarks.length; i++) {
+                    const x = landmarks[i].x * canvas.width;
+                    const y = landmarks[i].y * canvas.height;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#00ff00';
+                    ctx.fill();
+                }
                 
-                // البدء بالكشف
-                detectSignFromHand();
+                // رسم الوصلات
+                const connections = [
+                    [0,1], [1,2], [2,3], [3,4],
+                    [0,5], [5,6], [6,7], [7,8],
+                    [0,9], [9,10], [10,11], [11,12],
+                    [0,13], [13,14], [14,15], [15,16],
+                    [0,17], [17,18], [18,19], [19,20]
+                ];
                 
-            } catch (error) {
-                console.error('خطأ:', error);
-                alert('لا يمكن الوصول إلى الكاميرا');
+                connections.forEach(conn => {
+                    const p1 = landmarks[conn[0]];
+                    const p2 = landmarks[conn[1]];
+                    const x1 = p1.x * canvas.width;
+                    const y1 = p1.y * canvas.height;
+                    const x2 = p2.x * canvas.width;
+                    const y2 = p2.y * canvas.height;
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.strokeStyle = '#ff0000';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                });
+                
+                // كشف الإشارة
+                detectedSign = detectSign(landmarks);
             }
+            
+            // تحديث الواجهة
+            if (detectedSign) {
+                const displayText = `${detectedSign.sign} ${detectedSign.name}`;
+                document.getElementById('detectedSign').innerHTML = detectedSign.sign;
+                document.getElementById('detectedName').innerHTML = detectedSign.name;
+                document.getElementById('confidence').innerHTML = '✅ تم الكشف';
+                
+                // نطق تلقائي
+                if (document.getElementById('autoSpeak').checked && detectedSign.name !== lastDetectedSign) {
+                    const now = Date.now();
+                    if (now - lastSpeakTime > 1500) { // مرة كل 1.5 ثانية
+                        lastSpeakTime = now;
+                        speakText(detectedSign.name);
+                    }
+                    lastDetectedSign = detectedSign.name;
+                }
+            } else if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                document.getElementById('detectedSign').innerHTML = "🖐️";
+                document.getElementById('detectedName').innerHTML = "إشارة غير معروفة";
+                document.getElementById('confidence').innerHTML = "❌ لم يتم التعرف";
+            } else {
+                document.getElementById('detectedSign').innerHTML = "🤚";
+                document.getElementById('detectedName').innerHTML = "لا توجد يد";
+                document.getElementById('confidence').innerHTML = "";
+            }
+        }
+
+        // بدء الكاميرا
+        async function startCamera() {
+            video = document.getElementById('video');
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+            
+            // إعداد MediaPipe Hands
+            hands = new Hands({
+                locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+                }
+            });
+            
+            hands.setOptions({
+                maxNumHands: 1,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.7,
+                minTrackingConfidence: 0.5
+            });
+            
+            hands.onResults(onResults);
+            
+            // تشغيل الكاميرا
+            camera = new Camera(video, {
+                onFrame: async () => {
+                    if (cameraRunning) {
+                        await hands.send({ image: video });
+                    }
+                },
+                width: 640,
+                height: 480
+            });
+            
+            camera.start();
+            cameraRunning = true;
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('status').innerHTML = '✅ الكاميرا شغالة - اشر بيدك';
+            
+            // ضبط حجم الكانفاس
+            setTimeout(() => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+            }, 100);
         }
 
         // إيقاف الكاميرا
         function stopCamera() {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-                stream = null;
+            if (camera) {
+                camera.stop();
+                camera = null;
             }
             cameraRunning = false;
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
-            document.getElementById('detectedName').innerHTML = 'في انتظار الإشارة';
-            document.getElementById('detectedSign').innerHTML = '🤚';
+            document.getElementById('status').innerHTML = '⏹️ الكاميرا متوقفة';
+            
+            if (ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
         }
 
-        // عرض الإشارات عند التحميل
-        displaySigns();
+        // عرض قائمة الإشارات عند التحميل
+        displaySignsList();
+        document.getElementById('status').innerHTML = '✅ جاهز - اضغط "تشغيل الكاميرا"';
     </script>
 </body>
 </html>
