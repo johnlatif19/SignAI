@@ -1,0 +1,84 @@
+{
+  "signs": [
+    {
+      "id": "iloveyou",
+      "sign": "🤟",
+      "name": "أحبك",
+      "meaning": "I Love You",
+      "description": "مد الإبهام والسبابة والخنصر مع قبض البنصر والوسطى",
+      "category": "مشاعر"
+    },
+    {
+      "id": "good",
+      "sign": "👍",
+      "name": "تمام",
+      "meaning": "Good / OK",
+      "description": "رفع الإبهام لأعلى",
+      "category": "تقييم"
+    },
+    {
+      "id": "peace",
+      "sign": "✌️",
+      "name": "سلام",
+      "meaning": "Peace",
+      "description": "رفع السبابة والوسطى",
+      "category": "تحية"
+    },
+    {
+      "id": "one",
+      "sign": "☝️",
+      "name": "واحد",
+      "meaning": "One",
+      "description": "رفع السبابة فقط",
+      "category": "أرقام"
+    },
+    {
+      "id": "fist",
+      "sign": "✊",
+      "name": "قبضة",
+      "meaning": "Fist",
+      "description": "قبضة اليد",
+      "category": "حركات"
+    },
+    {
+      "id": "five",
+      "sign": "🖐️",
+      "name": "خمسة",
+      "meaning": "Five",
+      "description": "كف مفتوح",
+      "category": "أرقام"
+    },
+    {
+      "id": "call",
+      "sign": "🤙",
+      "name": "كلمني",
+      "meaning": "Call Me",
+      "description": "إبهام وخنصر ممدودين",
+      "category": "حركات"
+    },
+    {
+      "id": "hello",
+      "sign": "👋",
+      "name": "مرحباً",
+      "meaning": "Hello",
+      "description": "اليد تتحرك يمين ويسار",
+      "category": "تحية"
+    },
+    {
+      "id": "ok",
+      "sign": "👌",
+      "name": "تمام",
+      "meaning": "OK",
+      "description": "الإبهام والسبابة دائرة",
+      "category": "تقييم"
+    },
+    {
+      "id": "clap",
+      "sign": "👏",
+      "name": "تصفيق",
+      "meaning": "Clap",
+      "description": "تصفيق اليدين",
+      "category": "حركات"
+    }
+  ]
+}
